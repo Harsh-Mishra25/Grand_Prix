@@ -1,5 +1,9 @@
 transformers
 torch
+datasets
+accelerate
+evaluate
+scikit-learn
 fastapi
 uvicorn
 pillow
