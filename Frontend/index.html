@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GrandPrix — Track Condition Detector</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+  :root{
+    --asphalt:#0c0d10;
+    --asphalt-2:#15171b;
+    --haas-red:#e10600;
+    --haas-red-dim:#8a0500;
+    --line-white:#f2f2ef;
+    --steel:#5a5f68;
+    --wet-blue:#2f7dd6;
+    --damp-teal:#4fb0a5;
+    --drying-amber:#e0a534;
+    --dry-red:#e10600;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--asphalt);
+    color:var(--line-white);
+    font-family:'Barlow Condensed', sans-serif;
+    min-height:100vh;
+    background-image:
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 40px);
+  }
+
+  .rig{
+    max-width:1040px;
+    margin:0 auto;
+    padding:0 24px 80px;
+  }
+
+  /* ---- Header / hero ---- */
+  header.hero{
+    padding:36px 0 28px;
+    border-bottom:3px solid var(--haas-red);
+    position:relative;
+  }
+  .kicker{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    color:var(--steel);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .kicker::before{
+    content:"";
+    width:8px;height:8px;
+    background:var(--haas-red);
+    display:inline-block;
+    border-radius:1px;
+  }
+  h1.title{
+    font-size:clamp(40px, 7vw, 68px);
+    line-height:.92;
+    font-weight:800;
+    text-transform:uppercase;
+    margin:0;
+    letter-spacing:-.01em;
+  }
+  h1.title span{color:var(--haas-red);}
+  .subtitle{
+    font-family:'Space Mono', monospace;
+    color:var(--steel);
+    font-size:14px;
+    margin-top:12px;
+    max-width:520px;
+    line-height:1.5;
+  }
+
+  /* ---- Layout grid ---- */
+  .deck{
+    display:grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap:20px;
+    margin-top:32px;
+  }
+  @media (max-width:760px){ .deck{grid-template-columns:1fr;} }
+
+  .panel{
+    background:var(--asphalt-2);
+    border:1px solid #232529;
+    padding:22px;
+    position:relative;
+  }
+  .panel-label{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:var(--steel);
+    margin-bottom:16px;
+    display:flex;
+    justify-content:space-between;
+  }
+
+  /* ---- Upload zone ---- */
+  .dropzone{
+    border:2px dashed #3a3d43;
+    padding:32px 16px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .dropzone:hover, .dropzone.drag{
+    border-color:var(--haas-red);
+    background:rgba(225,6,0,0.04);
+  }
+  .dropzone input{display:none;}
+  .dz-icon{font-size:34px; margin-bottom:8px; opacity:.6;}
+  .dz-text{font-size:19px; font-weight:600; text-transform:uppercase;}
+  .dz-sub{font-family:'Space Mono',monospace; font-size:12px; color:var(--steel); margin-top:6px;}
+
+  #preview{
+    width:100%;
+    max-height:220px;
+    object-fit:cover;
+    margin-top:16px;
+    display:none;
+    border:1px solid #2a2d32;
+  }
+
+  button.run{
+    width:100%;
+    margin-top:16px;
+    background:var(--haas-red);
+    color:var(--line-white);
+    border:none;
+    padding:14px;
+    font-family:'Barlow Condensed', sans-serif;
+    font-size:18px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    cursor:pointer;
+    transition:background .15s ease, transform .1s ease;
+  }
+  button.run:hover{background:#ff1a12;}
+  button.run:active{transform:scale(.99);}
+  button.run:disabled{background:#3a3d43; cursor:not-allowed;}
+
+  /* ---- Result panel ---- */
+  .result-empty{
+    color:var(--steel);
+    font-family:'Space Mono', monospace;
+    font-size:13px;
+    line-height:1.7;
+    padding:20px 0;
+  }
+
+  .condition-readout{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    margin-bottom:6px;
+  }
+  .condition-label{
+    font-size:44px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:-.01em;
+  }
+  .condition-conf{
+    font-family:'Space Mono', monospace;
+    font-size:14px;
+    color:var(--steel);
+  }
+
+  .bars{margin-top:18px; display:flex; flex-direction:column; gap:10px;}
+  .bar-row{display:grid; grid-template-columns:70px 1fr 48px; align-items:center; gap:10px;}
+  .bar-name{font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase; color:var(--steel);}
+  .bar-track{background:#1e2024; height:8px; position:relative; overflow:hidden;}
+  .bar-fill{height:100%; width:0%; transition:width .5s ease;}
+  .bar-val{font-family:'Space Mono',monospace; font-size:11px; text-align:right; color:var(--steel);}
+
+  .divider{height:1px; background:#232529; margin:20px 0;}
+
+  .trend-line{
+    font-family:'Space Mono', monospace;
+    font-size:13px;
+    color:var(--steel);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  .trend-line strong{color:var(--line-white);}
+
+  .flag{
+    margin-top:14px;
+    padding:12px 14px;
+    border-left:4px solid var(--haas-red);
+    background:rgba(225,6,0,0.06);
+    font-size:16px;
+    font-weight:600;
+  }
+  .flag.good{border-left-color:var(--damp-teal); background:rgba(79,176,165,0.08);}
+
+  .history-strip{
+    display:flex;
+    gap:4px;
+    margin-top:16px;
+    flex-wrap:wrap;
+  }
+  .history-chip{
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    padding:4px 8px;
+    border:1px solid #2a2d32;
+    color:var(--steel);
+  }
+
+  .server-note{
+    margin-top:28px;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color:var(--steel);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--steel);}
+  .dot.live{background:#3fc46c;}
+  .dot.down{background:var(--haas-red);}
+
+  .stripe-footer{
+    height:6px;
+    margin-top:40px;
+    background:repeating-linear-gradient(90deg, var(--haas-red) 0 22px, var(--line-white) 22px 44px);
+    opacity:.85;
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+
+  <header class="hero">
+    <div class="kicker">Problem Statement 02 · Weather Whiplash</div>
+    <h1 class="title">TRACK<br><span>CONDITION</span> READ</h1>
+    <p class="subtitle">Feed in a trackside frame. CLIP reads the surface, scores it against dry / damp / drying / wet, and tracks whether the track is getting safer or riskier over your last readings.</p>
+  </header>
+
+  <div class="deck">
+
+    <!-- Upload panel -->
+    <div class="panel">
+      <div class="panel-label"><span>Input</span><span id="statusTag">idle</span></div>
+
+      <label class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept="image/*">
+        <div class="dz-icon">▲</div>
+        <div class="dz-text">Drop or select frame</div>
+        <div class="dz-sub">JPG / PNG — trackside or onboard</div>
+      </label>
+
+      <img id="preview" alt="preview">
+
+      <button class="run" id="runBtn" disabled>Classify Surface</button>
+    </div>
+
+    <!-- Result panel -->
+    <div class="panel">
+      <div class="panel-label"><span>Output</span><span id="frameCount">0 frames read</span></div>
+
+      <div id="resultEmpty" class="result-empty">
+        No frame classified yet.<br>
+        Upload a track image and run classification to see:<br>
+        · condition label + confidence<br>
+        · per-class score breakdown<br>
+        · trend across recent frames<br>
+        · tire-change recommendation
+      </div>
+
+      <div id="resultBody" style="display:none;">
+        <div class="condition-readout">
+          <div class="condition-label" id="labelOut">—</div>
+          <div class="condition-conf" id="confOut">—</div>
+        </div>
+
+        <div class="bars" id="barsOut"></div>
+
+        <div class="divider"></div>
+
+        <div class="trend-line">Trend: <strong id="trendOut">—</strong></div>
+
+        <div class="flag" id="flagOut">—</div>
+
+        <div class="history-strip" id="historyOut"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="server-note">
+    <span class="dot" id="serverDot"></span>
+    <span id="serverText">Checking backend at 127.0.0.1:8000…</span>
+  </div>
+
+  <div class="stripe-footer"></div>
+</div>
+
+<script>
+const API_BASE = "http://127.0.0.1:8000";
+
+const fileInput = document.getElementById('fileInput');
+const dropzone = document.getElementById('dropzone');
+const preview = document.getElementById('preview');
+const runBtn = document.getElementById('runBtn');
+const statusTag = document.getElementById('statusTag');
+const resultEmpty = document.getElementById('resultEmpty');
+const resultBody = document.getElementById('resultBody');
+const labelOut = document.getElementById('labelOut');
+const confOut = document.getElementById('confOut');
+const barsOut = document.getElementById('barsOut');
+const trendOut = document.getElementById('trendOut');
+const flagOut = document.getElementById('flagOut');
+const historyOut = document.getElementById('historyOut');
+const frameCount = document.getElementById('frameCount');
+const serverDot = document.getElementById('serverDot');
+const serverText = document.getElementById('serverText');
+
+let selectedFile = null;
+let framesRead = 0;
+
+const COLORS = {
+  dry: '#e10600',
+  damp: '#4fb0a5',
+  drying: '#e0a534',
+  wet: '#2f7dd6'
+};
+
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files.length) handleFile(e.target.files[0]);
+});
+
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('drag');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+
+function handleFile(file){
+  selectedFile = file;
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+  runBtn.disabled = false;
+  statusTag.textContent = 'ready';
+}
+
+runBtn.addEventListener('click', async () => {
+  if (!selectedFile) return;
+  runBtn.disabled = true;
+  runBtn.textContent = 'Reading frame…';
+  statusTag.textContent = 'processing';
+
+  const formData = new FormData();
+  formData.append('file', selectedFile);
+
+  try {
+    const res = await fetch(`${API_BASE}/predict`, { method: 'POST', body: formData });
+    if (!res.ok) throw new Error('Server error ' + res.status);
+    const data = await res.json();
+    renderResult(data);
+    statusTag.textContent = 'done';
+  } catch (err) {
+    statusTag.textContent = 'error';
+    resultEmpty.style.display = 'block';
+    resultBody.style.display = 'none';
+    resultEmpty.textContent = 'Could not reach backend — is uvicorn running at 127.0.0.1:8000?';
+  } finally {
+    runBtn.disabled = false;
+    runBtn.textContent = 'Classify Surface';
+  }
+});
+
+function renderResult(data){
+  framesRead++;
+  frameCount.textContent = `${framesRead} frame${framesRead > 1 ? 's' : ''} read`;
+
+  resultEmpty.style.display = 'none';
+  resultBody.style.display = 'block';
+
+  labelOut.textContent = data.label;
+  labelOut.style.color = COLORS[data.label] || '#fff';
+  confOut.textContent = Math.round(data.confidence * 100) + '% confidence';
+
+  barsOut.innerHTML = '';
+  Object.entries(data.all_scores).forEach(([name, score]) => {
+    const pct = Math.round(score * 100);
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <div class="bar-name">${name}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%; background:${COLORS[name] || '#888'}"></div></div>
+      <div class="bar-val">${pct}%</div>
+    `;
+    barsOut.appendChild(row);
+  });
+
+  trendOut.textContent = data.trend;
+
+  flagOut.textContent = data.tire_suggestion;
+  flagOut.className = 'flag' + (data.trend === 'getting drier' ? ' good' : '');
+
+  historyOut.innerHTML = '';
+  (data.history || []).forEach(label => {
+    const chip = document.createElement('span');
+    chip.className = 'history-chip';
+    chip.textContent = label;
+    historyOut.appendChild(chip);
+  });
+}
+
+// Ping backend on load
+(async function checkServer(){
+  try {
+    const res = await fetch(`${API_BASE}/`);
+    if (res.ok){
+      serverDot.classList.add('live');
+      serverText.textContent = 'Backend connected at 127.0.0.1:8000';
+    } else {
+      throw new Error();
+    }
+  } catch {
+    serverDot.classList.add('down');
+    serverText.textContent = 'Backend not reachable — start uvicorn in Backend/';
+  }
+})();
+</script>
+
+</body>
+</html>
