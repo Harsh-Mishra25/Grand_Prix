@@ -1,5 +1,6 @@
 transformers
 torch
+torchvision
 datasets
 accelerate
 evaluate
