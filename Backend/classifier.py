@@ -13,7 +13,6 @@ LABELS = {
     "dry": "a photo of a dry racetrack with no water on the surface",
     "damp": "a photo of a slightly damp racetrack with a wet sheen but no puddles",
     "wet": "a photo of a wet racetrack with visible puddles and standing water",
-    "drying": "a photo of a racetrack that is drying, with patchy wet and dry areas",
 }
 
 def classify_image(image: Image.Image):

@@ -3,9 +3,8 @@ from collections import deque
 # Order matters: worse (wetter) → better (drier)
 CONDITION_SEVERITY = {
     "dry": 0,
-    "drying": 1,
-    "damp": 2,
-    "wet": 3,
+    "damp": 1,
+    "wet": 2,
 }
 
 # Keep last N readings in memory
