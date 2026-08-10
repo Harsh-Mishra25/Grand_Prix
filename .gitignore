@@ -1,3 +1,33 @@
+# Python
 .venv/
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+
+# Environment / secrets
+.env
+*.env
+
+# Model artifacts
+*.pt
+*.pth
+*.ckpt
+*.onnx
+checkpoints/
+runs/
+logs/
+
+# Data & video files (too large for GitHub — use Git LFS or external storage instead)
+Data/
+RawClips/
+*.mp4
+*.mov
+*.avi
+*.mkv
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+*.swp
