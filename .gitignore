@@ -14,9 +14,12 @@ __pycache__/
 *.pth
 *.ckpt
 *.onnx
+*.safetensors
+*.bin
 checkpoints/
 runs/
 logs/
+Backend/model/
 
 # Data & video files (too large for GitHub — use Git LFS or external storage instead)
 Data/
@@ -30,4 +33,3 @@ RawClips/
 .DS_Store
 Thumbs.db
 .vscode/
-*.swp
