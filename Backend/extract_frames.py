@@ -5,7 +5,7 @@ import numpy as np
 RAW_CLIPS_DIR = "../RawClips"   # RawClips/dry/, RawClips/damp/, RawClips/wet/
 OUTPUT_DIR = "../Data"           # Data/dry/, Data/damp/, Data/wet/
 FRAME_INTERVAL_SEC = 1.5         # check a candidate frame every N seconds
-SIMILARITY_THRESHOLD = 30        # higher = allows more similar frames through; lower = stricter
+SIMILARITY_THRESHOLD = 15        # higher = allows more similar frames through; lower = stricter
 
 def frame_difference(f1, f2):
     """Mean pixel difference between two grayscale frames."""
