@@ -27,3 +27,6 @@ Backend/model/
 .DS_Store
 Thumbs.db
 .vscode/
+# Dataset / raw media
+Data/
+RawClips/
