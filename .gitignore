@@ -21,13 +21,7 @@ runs/
 logs/
 Backend/model/
 
-# Data & video files (too large for GitHub — use Git LFS or external storage instead)
-Data/
-RawClips/
-*.mp4
-*.mov
-*.avi
-*.mkv
+
 
 # OS / editor junk
 .DS_Store
