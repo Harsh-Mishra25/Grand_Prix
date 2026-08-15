@@ -20,6 +20,7 @@
     --wet-blue:#2f7dd6;
     --amber:#e0a534;
     --good-green:#3fc46c;
+    --risk-high:#e67e22;
     --letterbox-h: 34px;
 
     /* semantic condition colors — meaning first, brand color second */
@@ -261,17 +262,36 @@
   .trend-badge{ font-family:'Space Mono', monospace; font-size:11px; display:flex; align-items:center; gap:5px; }
   .chart-wrap{ position:relative; height:110px; margin-top:4px; }
 
-  .flag{
-    margin-top:16px; padding:12px 14px; border-left:4px solid var(--haas-red);
-    background:rgba(225,6,0,0.06); font-size:16px; font-weight:600;
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  /* ---- Risk / Action panel ---- */
+  .risk-action{
+    margin-top:16px; padding:14px 16px; border-left:4px solid var(--steel-dim);
+    background:rgba(255,255,255,0.02); transition:border-color .2s ease, background .2s ease;
   }
-  .flag.moderate{ border-left-color:var(--amber); background:rgba(224,165,52,0.08); }
-  .flag.good{ border-left-color:var(--good-green); background:rgba(63,196,108,0.08); }
-  .flag-urgency{
+  .risk-action.critical{ border-left-color:var(--haas-red); background:rgba(225,6,0,0.09); }
+  .risk-action.high{ border-left-color:var(--risk-high); background:rgba(230,126,34,0.09); }
+  .risk-action.moderate{ border-left-color:var(--amber); background:rgba(224,165,52,0.08); }
+  .risk-action.low{ border-left-color:var(--good-green); background:rgba(63,196,108,0.07); }
+
+  .risk-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  .risk-label{
     font-family:'Space Mono', monospace; font-size:10px; text-transform:uppercase;
-    letter-spacing:.08em; padding:3px 8px; border:1px solid currentColor; white-space:nowrap;
+    letter-spacing:.14em; color:var(--steel);
   }
+  .risk-value{
+    font-family:'Space Mono', monospace; font-size:12px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.06em; padding:3px 10px; border:1px solid currentColor; white-space:nowrap;
+  }
+  .risk-value.critical{ color:var(--haas-red); }
+  .risk-value.high{ color:var(--risk-high); }
+  .risk-value.moderate{ color:var(--amber); }
+  .risk-value.low{ color:var(--good-green); }
+
+  .action-row{ display:flex; flex-direction:column; gap:4px; }
+  .action-label{
+    font-family:'Space Mono', monospace; font-size:10px; text-transform:uppercase;
+    letter-spacing:.14em; color:var(--steel);
+  }
+  .action-value{ font-size:19px; font-weight:700; color:var(--line-white); line-height:1.25; }
 
   .voice-log{ margin-top:16px; }
   .voice-log-label{
@@ -454,7 +474,8 @@
         · condition label + read certainty<br>
         · per-class score breakdown<br>
         · live trend chart across frames<br>
-        · spoken call-out + tire-change recommendation
+        · risk level + action needed (pit stop, hold, monitor)<br>
+        · spoken call-out with risk and action
       </div>
 
       <div id="resultUnrecognized" class="result-empty" style="display:none; border-left:3px solid var(--film-amber); padding-left:14px;">
@@ -482,9 +503,15 @@
         </div>
         <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
 
-        <div class="flag" id="flagOut">
-          <span id="flagText">—</span>
-          <span class="flag-urgency" id="flagUrgency">—</span>
+        <div class="risk-action" id="riskActionOut">
+          <div class="risk-row">
+            <span class="risk-label">Risk Level</span>
+            <span class="risk-value" id="riskValue">—</span>
+          </div>
+          <div class="action-row">
+            <span class="action-label">Action Needed</span>
+            <span class="action-value" id="actionValue">—</span>
+          </div>
         </div>
 
         <div class="voice-log">
@@ -532,9 +559,9 @@ const confOut = document.getElementById('confOut');
 const confRing = document.getElementById('confRing');
 const confRingVal = document.getElementById('confRingVal');
 const barsOut = document.getElementById('barsOut');
-const flagOut = document.getElementById('flagOut');
-const flagText = document.getElementById('flagText');
-const flagUrgency = document.getElementById('flagUrgency');
+const riskActionOut = document.getElementById('riskActionOut');
+const riskValue = document.getElementById('riskValue');
+const actionValue = document.getElementById('actionValue');
 const trendBadge = document.getElementById('trendBadge');
 const historyOut = document.getElementById('historyOut');
 const frameCount = document.getElementById('frameCount');
@@ -551,7 +578,7 @@ const ariaLive = document.getElementById('ariaLive');
 
 let framesRead = 0;
 let voiceSuppressed = false;
-let pendingSpeech = null; /* { type: 'reading', data, urgency } | { type: 'unrecognized' } — flushed once batch finishes */
+let pendingSpeech = null; /* { type: 'reading', data, risk } | { type: 'unrecognized' } — flushed once batch finishes */
 
 const COLORS = { dry: 'var(--c-dry)', damp: 'var(--c-damp)', wet: 'var(--c-wet)' };
 const COLOR_HEX = { dry: '#3fc46c', damp: '#e0a534', wet: '#2f7dd6' };
@@ -610,10 +637,59 @@ const trendChart = new Chart(document.getElementById('trendChart'), {
   }
 });
 
+/* ============ RISK & ACTION ASSESSMENT ============
+   Turns (label, confidence, trend) into a risk tier + a concrete, speakable action —
+   e.g. "Pit now — switch to full wets" vs "No action needed — continue on slicks".
+   This is what both the on-screen panel and the voice call-out are built from. */
+const RISK_LABEL = { critical: 'Critical', high: 'High', moderate: 'Moderate', low: 'Low' };
+
+function assessRisk(label, confidence, trendDirection){
+  const tire = TIRE_FOR[label] || 'current tires';
+  let level, action, actionSpoken;
+
+  if (label === 'wet'){
+    if (trendDirection === 'getting wetter' && confidence > 0.7){
+      level = 'critical';
+      action = `Pit now — switch to ${tire}`;
+      actionSpoken = `Pit now. Switch to ${tire}.`;
+    } else {
+      level = 'high';
+      action = `Stay on ${tire} — monitor closely`;
+      actionSpoken = `Stay on ${tire} and monitor closely.`;
+    }
+  } else if (label === 'damp'){
+    if (trendDirection === 'getting wetter'){
+      level = 'high';
+      action = `Prepare to pit — ${tire} or full wets soon`;
+      actionSpoken = `Prepare to pit for ${tire}.`;
+    } else if (trendDirection === 'getting drier'){
+      level = 'low';
+      action = `Conditions improving — hold current tires`;
+      actionSpoken = `Conditions improving. Hold current tires.`;
+    } else {
+      level = 'moderate';
+      action = `Monitor — ${tire} recommended if not already fitted`;
+      actionSpoken = `Monitor the track. ${tire} recommended.`;
+    }
+  } else { /* dry */
+    if (trendDirection === 'getting wetter'){
+      level = 'moderate';
+      action = `Watch closely — track may be turning damp`;
+      actionSpoken = `Watch closely, track may be turning damp.`;
+    } else {
+      level = 'low';
+      action = `No action needed — continue on ${tire}`;
+      actionSpoken = `No action needed. Continue on ${tire}.`;
+    }
+  }
+
+  return { level, label: RISK_LABEL[level], action, actionSpoken };
+}
+
 /* ============ VOICE OUTPUT — fast, relevant-only, calm co-pilot voice ============ */
 let voiceEnabled = true;
 let lastSpokenLabel = null;
-let lastSpokenUrgencyLevel = null;
+let lastSpokenRiskLevel = null;
 let lastUtteranceText = '';
 let hasGreeted = false;
 const voiceSupported = 'speechSynthesis' in window;
@@ -683,28 +759,29 @@ function logVoiceLine(text){
   while (voiceLogList.children.length > 6) voiceLogList.removeChild(voiceLogList.lastChild);
 }
 
-function buildBriefing(data, urgency){
+/* Builds the spoken sentence: condition, risk level, then the concrete action. */
+function buildBriefing(data, risk){
   const condition = data.label.charAt(0).toUpperCase() + data.label.slice(1);
-  return `${condition} track. ${urgency.recommendation}.`;
+  return `${condition} track. Risk ${risk.level}. ${risk.actionSpoken}`;
 }
 
-function announceReading(data, urgency){
+function announceReading(data, risk){
   const labelChanged = data.label !== lastSpokenLabel;
-  const urgencyChanged = urgency.level !== lastSpokenUrgencyLevel;
+  const riskChanged = risk.level !== lastSpokenRiskLevel;
 
   if (!hasGreeted){
     speak('Systems online.');
     hasGreeted = true;
   }
 
-  if (labelChanged || urgencyChanged){
-    const briefing = buildBriefing(data, urgency);
-    const prefix = urgency.level === 'high' ? 'Warning. ' : '';
-    speak(prefix + briefing, { interrupt: urgency.level === 'high' });
+  if (labelChanged || riskChanged){
+    const briefing = buildBriefing(data, risk);
+    const prefix = risk.level === 'critical' ? 'Warning. ' : '';
+    speak(prefix + briefing, { interrupt: risk.level === 'critical' });
   }
 
   lastSpokenLabel = data.label;
-  lastSpokenUrgencyLevel = urgency.level;
+  lastSpokenRiskLevel = risk.level;
 }
 
 /* ============ TREND (client-side fallback if backend omits it) ============ */
@@ -716,20 +793,6 @@ function computeTrend(){
   if (delta > 0) return 'getting wetter';
   if (delta < 0) return 'getting drier';
   return 'stable';
-}
-
-function urgencyFromReading(confidence, trendDirection, label){
-  const tire = TIRE_FOR[label] || 'current tires';
-  if (trendDirection === 'getting wetter' && confidence > 0.7){
-    return { level: 'high', text: `Box now — switch to ${tire}`, recommendation: `box immediately for ${tire}`, cls: '' };
-  }
-  if (trendDirection === 'getting wetter'){
-    return { level: 'moderate', text: `Prepare to switch to ${tire}`, recommendation: `prepare to switch to ${tire} soon`, cls: 'moderate' };
-  }
-  if (trendDirection === 'getting drier'){
-    return { level: 'improving', text: `Improving — hold on ${tire}`, recommendation: `conditions improving, hold on ${tire} for now`, cls: 'good' };
-  }
-  return { level: 'stable', text: `No change needed — ${tire} holding`, recommendation: `no change needed, ${tire} are holding well`, cls: 'good' };
 }
 
 function renderResult(data){
@@ -786,21 +849,23 @@ function renderResult(data){
   const trendDirection = data.trend || computeTrend();
   trendBadge.innerHTML = `<span style="color:${TREND_COLOR[trendDirection]}">${TREND_ICON[trendDirection] || '→'} ${trendDirection}</span>`;
 
-  const urgency = urgencyFromReading(data.confidence, trendDirection, data.label);
-  flagText.textContent = data.tire_suggestion || urgency.text;
-  flagUrgency.textContent = urgency.level;
-  flagOut.className = 'flag ' + urgency.cls;
+  /* ---- risk + action ---- */
+  const risk = assessRisk(data.label, data.confidence, trendDirection);
+  riskActionOut.className = 'risk-action ' + risk.level;
+  riskValue.className = 'risk-value ' + risk.level;
+  riskValue.textContent = risk.label;
+  actionValue.textContent = data.tire_suggestion || risk.action;
 
-  if (urgency.level === 'high'){
+  if (risk.level === 'critical'){
     outputPanel.classList.remove('alert-pulse');
     void outputPanel.offsetWidth;
     outputPanel.classList.add('alert-pulse');
   }
 
   if (voiceSuppressed){
-    pendingSpeech = { type: 'reading', data, urgency };
+    pendingSpeech = { type: 'reading', data, risk };
   } else {
-    announceReading(data, urgency);
+    announceReading(data, risk);
   }
 
   const confTier = pct >= 85 ? 'high confidence' : 'moderate confidence — a second frame would help confirm this';
@@ -1025,7 +1090,7 @@ videoRunBtn.addEventListener('click', async () => {
   voiceSuppressed = false;
   if (pendingSpeech){
     if (pendingSpeech.type === 'reading'){
-      announceReading(pendingSpeech.data, pendingSpeech.urgency);
+      announceReading(pendingSpeech.data, pendingSpeech.risk);
     } else if (pendingSpeech.type === 'unrecognized'){
       speak("That doesn't look like a track surface.", { interrupt: false });
     }
