@@ -9,14 +9,14 @@
   @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
 
   :root{
-    --cine-black:#050506;
-    --cine-black-2:#0c0d0f;
-    --cine-black-3:#141518;
+    --cine-black:#07080d;
+    --cine-black-2:#0f111a;
+    --cine-black-3:#161a26;
     --haas-red:#e10600;
     --film-amber:#d99a3f;
     --line-white:#f2f2ef;
-    --steel:#63676f;
-    --steel-dim:#2c2e33;
+    --steel:#767c8c;
+    --steel-dim:#252a3a;
     --wet-blue:#2f7dd6;
     --amber:#e0a534;
     --good-green:#3fc46c;
@@ -31,7 +31,11 @@
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:var(--cine-black);
+    background-color:var(--cine-black);
+    background-image:
+      radial-gradient(1100px circle at 8% -8%, rgba(70,100,255,0.09), transparent 55%),
+      radial-gradient(900px circle at 105% 5%, rgba(225,6,0,0.07), transparent 50%);
+    background-attachment:fixed;
     color:var(--line-white);
     font-family:'Barlow Condensed', sans-serif;
     min-height:100vh;
@@ -58,31 +62,6 @@
   .sprockets{ display:flex; gap:14px; width:100%; padding:0 10px; opacity:.5; }
   .sprockets span{ width:5px; height:5px; background:var(--steel-dim); flex-shrink:0; }
 
-  /* ============ INTRO LEADER (signature element) ============ */
-  .leader{
-    position:fixed; inset:0; z-index:100; background:var(--cine-black);
-    display:flex; align-items:center; justify-content:center;
-    animation:leaderOut .6s ease forwards; animation-delay:2.1s;
-  }
-  .leader-circle{
-    position:relative; width:150px; height:150px; border-radius:50%;
-    border:1px solid var(--steel-dim);
-    display:flex; align-items:center; justify-content:center;
-  }
-  .leader-circle::before, .leader-circle::after{ content:""; position:absolute; background:var(--steel-dim); }
-  .leader-circle::before{ width:1px; height:150px; left:50%; top:0; }
-  .leader-circle::after{ width:150px; height:1px; top:50%; left:0; }
-  .leader-num{ font-family:'Space Mono', monospace; font-size:44px; color:var(--haas-red); }
-  .leader-tag{
-    position:absolute; bottom:-34px; font-family:'Space Mono', monospace;
-    font-size:10px; letter-spacing:.3em; color:var(--steel); text-transform:uppercase;
-  }
-  @keyframes leaderOut{ to{ opacity:0; visibility:hidden; } }
-
-  @media (prefers-reduced-motion: reduce){
-    .leader{ display:none; }
-  }
-
   /* ============ LAYOUT ============ */
   .rig{ max-width:1080px; margin:0 auto; padding:56px 24px 90px; position:relative; z-index:1; }
 
@@ -98,11 +77,7 @@
   h1.title{
     font-size:clamp(36px, 6.5vw, 64px); line-height:.9; font-weight:800;
     text-transform:uppercase; margin:0; letter-spacing:-.01em;
-    clip-path:inset(0 100% 0 0);
-    animation:wipeReveal .9s cubic-bezier(.65,0,.15,1) forwards; animation-delay:2.15s;
   }
-  @media (prefers-reduced-motion: reduce){ h1.title{ clip-path:none; animation:none; } }
-  @keyframes wipeReveal{ to{ clip-path:inset(0 0 0 0); } }
   h1.title span{ color:var(--haas-red); }
   .subtitle{
     font-family:'Space Mono', monospace; color:var(--steel); font-size:13px;
@@ -114,7 +89,7 @@
 
   /* Panel = "viewfinder" framing */
   .panel{
-    position:relative; background:var(--cine-black-2); border:1px solid var(--steel-dim); padding:22px;
+    position:relative; background:linear-gradient(160deg, var(--cine-black-2), #0c0e15); border:1px solid var(--steel-dim); padding:22px;
     transition:box-shadow .3s ease, border-color .3s ease;
   }
   .panel::before, .panel::after{ content:""; position:absolute; width:14px; height:14px; pointer-events:none; }
@@ -170,19 +145,46 @@
   .mode-panel.active{ display:block; }
 
   .dropzone{
-    border:1px dashed var(--steel-dim); padding:28px 14px; text-align:center;
-    cursor:pointer; transition:border-color .15s ease, background .15s ease; position:relative;
+    border:1.5px dashed var(--steel-dim); padding:44px 18px; text-align:center;
+    cursor:pointer; transition:border-color .2s ease, background .2s ease, transform .2s ease; position:relative;
+    background:linear-gradient(180deg, rgba(255,255,255,0.015), transparent);
   }
-  .dropzone:hover, .dropzone.drag{ border-color:var(--haas-red); background:rgba(225,6,0,0.04); }
-  .dropzone input{ display:none; }
-  .dz-icon{ font-size:26px; margin-bottom:6px; opacity:.5; color:var(--film-amber); }
-  .dz-text{ font-size:18px; font-weight:600; text-transform:uppercase; }
-  .dz-sub{ font-family:'Space Mono',monospace; font-size:11px; color:var(--steel); margin-top:6px; }
+  .dropzone:hover{ border-color:var(--film-amber); background:rgba(217,154,63,0.05); transform:translateY(-1px); }
+  .dropzone.drag{ border-color:var(--haas-red); background:rgba(225,6,0,0.07); transform:translateY(-1px) scale(1.005); }
+  .dropzone input{
+    position:absolute;
+    width:1px; height:1px;
+    padding:0; margin:-1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+    white-space:nowrap;
+    border:0;
+  }
+  .dz-icon-wrap{
+    width:58px; height:58px; border-radius:50%; margin:0 auto 14px;
+    border:1px solid var(--steel-dim); display:flex; align-items:center; justify-content:center;
+    transition:border-color .2s ease, transform .2s ease, background .2s ease;
+  }
+  .dropzone:hover .dz-icon-wrap{ border-color:var(--film-amber); transform:scale(1.06); }
+  .dropzone.drag .dz-icon-wrap{ border-color:var(--haas-red); background:rgba(225,6,0,0.1); transform:scale(1.1); }
+  .dz-icon{ font-size:24px; opacity:.75; color:var(--film-amber); }
+  .dz-text{ font-size:19px; font-weight:700; text-transform:uppercase; letter-spacing:.01em; }
+  .dz-click{ font-family:'Space Mono',monospace; font-size:11px; color:var(--steel); margin-top:5px; }
+  .dz-click b{ color:var(--line-white); font-weight:700; text-decoration:underline; text-underline-offset:2px; }
+  .dz-sub{ font-family:'Space Mono',monospace; font-size:10.5px; color:var(--steel-dim); margin-top:10px; letter-spacing:.04em; }
 
-  .thumb-strip{ display:flex; gap:6px; flex-wrap:wrap; margin-top:14px; }
-  .thumb{ width:52px; height:52px; object-fit:cover; border:1px solid var(--steel-dim); opacity:.5; transition:opacity .2s ease, border-color .2s ease; filter:grayscale(.4); }
-  .thumb.active{ opacity:1; border-color:var(--haas-red); filter:none; }
-  .thumb.done{ opacity:.85; filter:none; }
+  .preview-image{
+    width:100%; max-height:340px; min-height:160px; object-fit:contain;
+    background:#000; border:1px solid var(--steel-dim); display:block; margin-top:16px;
+    filter:contrast(1.05) saturate(.9);
+  }
+  .image-remove-btn{
+    display:none; width:100%; margin-top:10px; background:transparent;
+    border:1px solid var(--steel-dim); color:var(--steel); cursor:pointer;
+    font-family:'Space Mono', monospace; font-size:11px; text-transform:uppercase;
+    letter-spacing:.08em; padding:8px; transition:all .15s ease;
+  }
+  .image-remove-btn:hover{ border-color:var(--haas-red); color:var(--haas-red); background:rgba(225,6,0,0.05); }
 
   button.run{
     width:100%; margin-top:16px; background:var(--haas-red); color:var(--line-white);
@@ -209,6 +211,14 @@
     width:100%; max-height:220px; object-fit:cover; border:1px solid var(--steel-dim);
     background:#000; display:block; margin-top:4px; filter:contrast(1.05) saturate(.9);
   }
+
+  .video-remove-btn{
+    display:none; width:100%; margin-top:10px; background:transparent;
+    border:1px solid var(--steel-dim); color:var(--steel); cursor:pointer;
+    font-family:'Space Mono', monospace; font-size:11px; text-transform:uppercase;
+    letter-spacing:.08em; padding:8px; transition:all .15s ease;
+  }
+  .video-remove-btn:hover{ border-color:var(--haas-red); color:var(--haas-red); background:rgba(225,6,0,0.05); }
 
   .cam-status{
     display:flex; align-items:center; gap:8px; font-family:'Space Mono', monospace;
@@ -283,6 +293,47 @@
     padding:4px 8px; border:1px solid var(--steel-dim); color:var(--steel);
   }
 
+  .explain-note{
+    margin-top:16px; padding:11px 13px; border-left:2px solid var(--steel-dim);
+    font-family:'Space Mono', monospace; font-size:11px; line-height:1.7; color:var(--steel);
+    background:rgba(255,255,255,0.02);
+  }
+  .explain-note b{ color:var(--line-white); }
+
+  .loading-overlay{ display:none; }
+
+  /* non-blocking "analyzing" indicator — a thin sweep under the letterbox, screen stays fully visible */
+  .progress-bar{
+    position:fixed; left:0; right:0; top:var(--letterbox-h); height:3px; z-index:51;
+    overflow:hidden; pointer-events:none; background:rgba(255,255,255,0.03);
+  }
+  .progress-bar::before{
+    content:""; position:absolute; top:0; bottom:0; width:26%; left:-26%;
+    background:linear-gradient(90deg, transparent, var(--haas-red), var(--film-amber), transparent);
+  }
+  .progress-bar.active::before{ animation:progressSweep 1s ease-in-out infinite; }
+  @keyframes progressSweep{
+    0%{ left:-26%; }
+    100%{ left:100%; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .progress-bar.active::before{ animation:none; left:0; width:100%; opacity:.5; }
+  }
+
+  @keyframes loadingSpin{ to{ transform:rotate(360deg); } }
+
+  .analyzing-chip{
+    display:none; align-items:center; gap:7px;
+    font-family:'Space Mono', monospace; font-size:10px; text-transform:uppercase;
+    letter-spacing:.1em; color:var(--film-amber); white-space:nowrap;
+  }
+  .analyzing-chip.show{ display:flex; }
+  .mini-spinner{
+    width:10px; height:10px; border-radius:50%;
+    border:2px solid var(--steel-dim); border-top-color:var(--film-amber);
+    animation:loadingSpin .8s linear infinite; flex:none;
+  }
+
   .server-note{
     margin-top:28px; font-family:'Space Mono', monospace; font-size:11px; color:var(--steel);
     display:flex; align-items:center; gap:8px;
@@ -320,22 +371,15 @@
 <div class="vignette"></div>
 <div class="letterbox top"><div class="sprockets" id="sprocketsTop"></div></div>
 <div class="letterbox bottom"><div class="sprockets" id="sprocketsBottom"></div></div>
-
-<div class="leader" id="leader">
-  <div class="leader-circle">
-    <div class="leader-num" id="leaderNum">3</div>
-    <div class="leader-tag">Standby</div>
-  </div>
-</div>
+<div class="progress-bar" id="progressBar"></div>
 
 <div class="rig">
 
   <header class="hero">
-    <div class="kicker">Problem Statement 02 · Weather Whiplash</div>
     <div class="title-frame">
       <h1 class="title">TRACK<br><span>CONDITION</span> READ</h1>
     </div>
-    <p class="subtitle">Feed in trackside frames, a video clip, or a live camera. A fine-tuned classifier reads the surface, scores it against dry / damp / wet, tracks whether the track is getting safer or riskier — and calls it out loud so the driver never has to look away from the road.</p>
+    <p class="subtitle">Feed in a trackside frame, a video clip, or a live camera. A fine-tuned classifier reads the surface, scores it against dry / damp / wet, tracks whether the track is getting safer or riskier — and calls it out loud so the driver never has to look away from the road.</p>
   </header>
 
   <div class="deck">
@@ -352,12 +396,14 @@
       <!-- FRAMES MODE -->
       <div class="mode-panel active" id="panel-frames">
         <label class="dropzone" id="dropzone" tabindex="0">
-          <input type="file" id="fileInput" accept="image/*" multiple>
-          <div class="dz-icon">▲</div>
-          <div class="dz-text">Drop frames</div>
-          <div class="dz-sub">JPG / PNG — select one or several, in sequence</div>
+          <input type="file" id="fileInput" accept="image/*">
+          <div class="dz-icon-wrap"><div class="dz-icon">▲</div></div>
+          <div class="dz-text">Drop a frame here</div>
+          <div class="dz-click">or <b>click to browse</b> your files</div>
+          <div class="dz-sub">JPG · PNG — one image at a time</div>
         </label>
-        <div class="thumb-strip" id="thumbStrip"></div>
+        <img class="preview-image" id="imagePreview" alt="Selected frame preview" style="display:none;">
+        <button class="image-remove-btn" id="imageRemoveBtn" type="button">✕ Remove image</button>
         <button class="run" id="runBtn" disabled>Run classification</button>
         <div class="queue-note" id="queueNote"></div>
       </div>
@@ -366,11 +412,13 @@
       <div class="mode-panel" id="panel-video">
         <label class="dropzone" id="videoDropzone" tabindex="0">
           <input type="file" id="videoInput" accept="video/*">
-          <div class="dz-icon">▶</div>
-          <div class="dz-text">Drop a clip</div>
-          <div class="dz-sub">MP4 / MOV — frames sampled automatically</div>
+          <div class="dz-icon-wrap"><div class="dz-icon">▶</div></div>
+          <div class="dz-text">Drop a clip here</div>
+          <div class="dz-click">or <b>click to browse</b> your files</div>
+          <div class="dz-sub">MP4 · MOV — frames sampled automatically</div>
         </label>
         <video class="preview" id="videoPreview" style="display:none;" muted playsinline></video>
+        <button class="video-remove-btn" id="videoRemoveBtn" type="button">✕ Remove clip</button>
         <button class="run" id="videoRunBtn" disabled>Extract &amp; classify</button>
         <div class="queue-note" id="videoNote"></div>
       </div>
@@ -395,6 +443,7 @@
           <button class="voice-btn on" id="voiceBtn" title="Toggle spoken call-outs">
             <span class="dot"></span><span id="voiceBtnText">Voice on</span>
           </button>
+          <span class="analyzing-chip" id="analyzingChip"><span class="mini-spinner"></span><span id="analyzingText">Analyzing…</span></span>
           <span class="live-badge"><span class="live-dot" id="liveDot"></span><span id="frameCount">0 frames read</span></span>
         </div>
       </div>
@@ -406,6 +455,12 @@
         · per-class score breakdown<br>
         · live trend chart across frames<br>
         · spoken call-out + tire-change recommendation
+      </div>
+
+      <div id="resultUnrecognized" class="result-empty" style="display:none; border-left:3px solid var(--film-amber); padding-left:14px;">
+        <span style="color:var(--film-amber); font-weight:700; text-transform:uppercase; letter-spacing:.04em;">⚠ Not recognized as a track surface</span><br>
+        <span style="color:var(--steel);">Model confidence was only <b id="lowConfVal" style="color:var(--line-white);">—</b> — too low to trust. Try a clearer trackside frame.</span>
+        <div class="bars" id="lowConfBars" style="margin-top:16px;"></div>
       </div>
 
       <div id="resultBody" style="display:none;">
@@ -437,6 +492,8 @@
           <div class="voice-log-list" id="voiceLogList"></div>
         </div>
 
+        <div class="explain-note" id="explainNote"></div>
+
         <div class="history-strip" id="historyOut"></div>
       </div>
     </div>
@@ -463,20 +520,6 @@ function fillSprockets(el){
 }
 fillSprockets(document.getElementById('sprocketsTop'));
 fillSprockets(document.getElementById('sprocketsBottom'));
-
-/* ---------- intro leader countdown ---------- */
-(function runLeader(){
-  const leaderNum = document.getElementById('leaderNum');
-  const leader = document.getElementById('leader');
-  const seq = ['3', '2', '1'];
-  let i = 0;
-  const iv = setInterval(() => {
-    i++;
-    if (i < seq.length) { leaderNum.textContent = seq[i]; }
-    else { clearInterval(iv); }
-  }, 700);
-  setTimeout(() => { leader.style.pointerEvents = 'none'; }, 2100);
-})();
 
 /* ---------- shared output elements ---------- */
 const API_BASE = "http://127.0.0.1:8000";
@@ -507,6 +550,8 @@ const voiceLogList = document.getElementById('voiceLogList');
 const ariaLive = document.getElementById('ariaLive');
 
 let framesRead = 0;
+let voiceSuppressed = false;
+let pendingSpeech = null; /* { type: 'reading', data, urgency } | { type: 'unrecognized' } — flushed once batch finishes */
 
 const COLORS = { dry: 'var(--c-dry)', damp: 'var(--c-damp)', wet: 'var(--c-wet)' };
 const COLOR_HEX = { dry: '#3fc46c', damp: '#e0a534', wet: '#2f7dd6' };
@@ -514,6 +559,37 @@ const SEVERITY = { dry: 0, damp: 1, wet: 2 };
 const TREND_ICON = { 'getting wetter': '▲', 'getting drier': '▼', 'stable': '→' };
 const TREND_COLOR = { 'getting wetter': '#e10600', 'getting drier': 'var(--c-dry)', 'stable': 'var(--steel)' };
 const TIRE_FOR = { dry: 'slicks', damp: 'intermediates', wet: 'full wets' };
+
+/* What each label means and why it drives the tire call — general domain reasoning,
+   not a claim about specific pixels the model looked at (we don't have that kind of
+   explainability wired up, so we don't pretend to). Shown only as text — never spoken. */
+const EXPLANATIONS = {
+  dry: "A dry track means the model found no meaningful surface moisture — grip is at its highest, so slicks are the fastest choice.",
+  damp: "A damp track means a thin moisture film was detected without standing water — grip is reduced but not critical, so intermediates are the safer call.",
+  wet: "A wet track means visible water and pooling were detected — traction drops sharply, so full wets are recommended over slicks or intermediates."
+};
+
+const progressBar = document.getElementById('progressBar');
+const analyzingChip = document.getElementById('analyzingChip');
+const analyzingText = document.getElementById('analyzingText');
+function showLoading(text){
+  analyzingText.textContent = text || 'Analyzing…';
+  analyzingChip.classList.add('show');
+  progressBar.classList.add('active');
+}
+function hideLoading(){
+  analyzingChip.classList.remove('show');
+  progressBar.classList.remove('active');
+}
+
+/* Below this, the model isn't confident enough to trust — likely not a track frame at all.
+   Our classifier is a closed 3-class model, so it will always force dry/damp/wet onto ANY
+   image (a cat photo included). A confidence floor is the practical guard against that. */
+const CONFIDENCE_THRESHOLD = 0.55;
+const resultUnrecognized = document.getElementById('resultUnrecognized');
+const lowConfVal = document.getElementById('lowConfVal');
+const lowConfBars = document.getElementById('lowConfBars');
+let lastWasUnrecognized = false;
 
 const trendChart = new Chart(document.getElementById('trendChart'), {
   type: 'line',
@@ -553,9 +629,16 @@ function pickVoice(){
   if (!voiceSupported) return;
   const voices = window.speechSynthesis.getVoices();
   if (!voices.length) return;
-  const byName = (re) => voices.find(v => re.test(v.name));
+  const byPattern = (re) => voices.find(v => re.test(v.name));
+  /* Priority: genuine neural/"Natural" voices (Edge exposes these as
+     "Microsoft <Name> Online (Natural)") sound closest to a real human.
+     Fall back through progressively more robotic-but-still-decent options. */
   selectedVoice =
-    byName(/Daniel|Arthur|Google UK English Male|Microsoft (Guy|Ryan|George)|Alex/i) ||
+    byPattern(/Online \(Natural\)/i) ||
+    byPattern(/Neural/i) ||
+    byPattern(/Natural/i) ||
+    byPattern(/Google UK English Male|Google US English/i) ||
+    byPattern(/Daniel|Arthur|Alex/i) ||
     voices.find(v => v.lang === 'en-GB') ||
     voices.find(v => v.lang && v.lang.startsWith('en')) ||
     voices[0];
@@ -585,8 +668,8 @@ function speak(text, { interrupt = false, log = true } = {}){
   if (interrupt) window.speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   if (selectedVoice) utter.voice = selectedVoice;
-  utter.rate = 1.12;
-  utter.pitch = 0.95;
+  utter.rate = 1.0;
+  utter.pitch = 1.0;
   utter.volume = 1;
   window.speechSynthesis.speak(utter);
 }
@@ -650,14 +733,24 @@ function urgencyFromReading(confidence, trendDirection, label){
 }
 
 function renderResult(data){
+  const pct = Math.round(data.confidence * 100);
+  const hex = COLOR_HEX[data.label] || '#fff';
+
+  if (data.confidence < CONFIDENCE_THRESHOLD){
+    showUnrecognized(data, pct);
+    return;
+  }
+
+  if (lastWasUnrecognized){
+    lastWasUnrecognized = false;
+  }
+
   framesRead++;
   frameCount.textContent = `${framesRead} frame${framesRead > 1 ? 's' : ''} read`;
 
+  resultUnrecognized.style.display = 'none';
   resultEmpty.style.display = 'none';
   resultBody.style.display = 'block';
-
-  const pct = Math.round(data.confidence * 100);
-  const hex = COLOR_HEX[data.label] || '#fff';
 
   labelOut.textContent = data.label;
   labelOut.style.color = COLORS[data.label] || '#fff';
@@ -704,7 +797,15 @@ function renderResult(data){
     outputPanel.classList.add('alert-pulse');
   }
 
-  announceReading(data, urgency);
+  if (voiceSuppressed){
+    pendingSpeech = { type: 'reading', data, urgency };
+  } else {
+    announceReading(data, urgency);
+  }
+
+  const confTier = pct >= 85 ? 'high confidence' : 'moderate confidence — a second frame would help confirm this';
+  const explainEl = document.getElementById('explainNote');
+  explainEl.innerHTML = `<b>Why this call:</b> ${EXPLANATIONS[data.label] || ''} <span style="opacity:.75">(${confTier}, ${pct}% match)</span>`;
 
   historyOut.innerHTML = '';
   (data.history || []).forEach(label => {
@@ -715,6 +816,37 @@ function renderResult(data){
     chip.textContent = label;
     historyOut.appendChild(chip);
   });
+}
+
+function showUnrecognized(data, pct){
+  statusTag.textContent = 'unrecognized';
+  resultEmpty.style.display = 'none';
+  resultBody.style.display = 'none';
+  resultUnrecognized.style.display = 'block';
+
+  lowConfVal.textContent = pct + '%';
+
+  lowConfBars.innerHTML = '';
+  Object.entries(data.all_scores || {}).forEach(([name, score]) => {
+    const p = Math.round(score * 100);
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <div class="bar-name">${name}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${p}%; background:${COLOR_HEX[name] || '#888'}"></div></div>
+      <div class="bar-val">${p}%</div>
+    `;
+    lowConfBars.appendChild(row);
+  });
+
+  if (!lastWasUnrecognized){
+    if (voiceSuppressed){
+      pendingSpeech = { type: 'unrecognized' };
+    } else {
+      speak("That doesn't look like a track surface.", { interrupt: false });
+    }
+  }
+  lastWasUnrecognized = true;
 }
 
 /* classify a single blob against the backend */
@@ -749,64 +881,65 @@ document.querySelectorAll('.mode-tab').forEach(tab => {
   });
 });
 
-/* ============ FRAMES MODE ============ */
+/* ============ FRAMES MODE (single image) ============ */
 const fileInput = document.getElementById('fileInput');
 const dropzone = document.getElementById('dropzone');
-const thumbStrip = document.getElementById('thumbStrip');
+const imagePreview = document.getElementById('imagePreview');
+const imageRemoveBtn = document.getElementById('imageRemoveBtn');
 const runBtn = document.getElementById('runBtn');
 const queueNote = document.getElementById('queueNote');
-let queuedFiles = [];
+let selectedImageFile = null;
 
-fileInput.addEventListener('change', (e) => { if (e.target.files.length) queueFiles([...e.target.files]); });
+fileInput.addEventListener('change', (e) => { if (e.target.files.length) selectImage(e.target.files[0]); });
 dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag'); });
 dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
 dropzone.addEventListener('drop', (e) => {
   e.preventDefault(); dropzone.classList.remove('drag');
-  if (e.dataTransfer.files.length) queueFiles([...e.dataTransfer.files]);
+  if (e.dataTransfer.files.length) selectImage(e.dataTransfer.files[0]);
 });
 
-function queueFiles(files){
-  queuedFiles = files;
-  thumbStrip.innerHTML = '';
-  files.forEach((f, i) => {
-    const img = document.createElement('img');
-    img.className = 'thumb';
-    img.id = `thumb-${i}`;
-    img.src = URL.createObjectURL(f);
-    thumbStrip.appendChild(img);
-  });
+function selectImage(file){
+  selectedImageFile = file;
+  imagePreview.src = URL.createObjectURL(file);
+  imagePreview.style.display = 'block';
+  imageRemoveBtn.style.display = 'block';
   runBtn.disabled = false;
   statusTag.textContent = 'ready';
-  queueNote.textContent = `${files.length} frame${files.length > 1 ? 's' : ''} queued`;
+  queueNote.textContent = '1 frame selected';
+  fileInput.value = '';
 }
 
+function removeImage(){
+  selectedImageFile = null;
+  imagePreview.removeAttribute('src');
+  imagePreview.style.display = 'none';
+  imageRemoveBtn.style.display = 'none';
+  runBtn.disabled = true;
+  statusTag.textContent = 'idle';
+  queueNote.textContent = '';
+  fileInput.value = '';
+}
+
+imageRemoveBtn.addEventListener('click', removeImage);
+
 runBtn.addEventListener('click', async () => {
-  if (!queuedFiles.length) return;
+  if (!selectedImageFile) return;
   runBtn.disabled = true;
   statusTag.textContent = 'processing';
   liveDot.classList.add('on');
+  showLoading('Analyzing frame…');
 
-  for (let i = 0; i < queuedFiles.length; i++) {
-    const thumb = document.getElementById(`thumb-${i}`);
-    thumb.classList.add('active');
-    queueNote.textContent = `reading frame ${i + 1} of ${queuedFiles.length}…`;
-    runBtn.textContent = `Reading ${i + 1}/${queuedFiles.length}…`;
-    try {
-      await classifyBlob(queuedFiles[i], queuedFiles[i].name);
-      thumb.classList.remove('active');
-      thumb.classList.add('done');
-    } catch (err) {
-      showBackendError();
-      break;
-    }
-    if (i < queuedFiles.length - 1) await new Promise(r => setTimeout(r, 350));
+  try {
+    await classifyBlob(selectedImageFile, selectedImageFile.name);
+    queueNote.textContent = 'complete';
+  } catch (err) {
+    showBackendError();
   }
 
+  hideLoading();
   liveDot.classList.remove('on');
   statusTag.textContent = 'done';
   runBtn.disabled = false;
-  runBtn.textContent = 'Run classification';
-  queueNote.textContent = 'complete';
 });
 
 /* ============ VIDEO MODE ============ */
@@ -814,6 +947,7 @@ const videoInput = document.getElementById('videoInput');
 const videoDropzone = document.getElementById('videoDropzone');
 const videoPreview = document.getElementById('videoPreview');
 const videoRunBtn = document.getElementById('videoRunBtn');
+const videoRemoveBtn = document.getElementById('videoRemoveBtn');
 const videoNote = document.getElementById('videoNote');
 const MAX_VIDEO_FRAMES = 12;
 let loadedVideoFile = null;
@@ -830,9 +964,24 @@ function loadVideo(file){
   loadedVideoFile = file;
   videoPreview.src = URL.createObjectURL(file);
   videoPreview.style.display = 'block';
+  videoRemoveBtn.style.display = 'block';
   videoRunBtn.disabled = false;
   videoNote.textContent = 'ready — will sample up to ' + MAX_VIDEO_FRAMES + ' frames across the clip';
 }
+
+function removeVideo(){
+  loadedVideoFile = null;
+  videoPreview.pause();
+  videoPreview.removeAttribute('src');
+  videoPreview.load();
+  videoPreview.style.display = 'none';
+  videoRemoveBtn.style.display = 'none';
+  videoRunBtn.disabled = true;
+  videoInput.value = '';
+  videoNote.textContent = '';
+}
+
+videoRemoveBtn.addEventListener('click', removeVideo);
 
 function seekTo(videoEl, time){
   return new Promise((resolve) => {
@@ -847,6 +996,10 @@ videoRunBtn.addEventListener('click', async () => {
   videoRunBtn.disabled = true;
   statusTag.textContent = 'processing';
   liveDot.classList.add('on');
+  showLoading('Sampling clip…');
+
+  voiceSuppressed = true;
+  pendingSpeech = null;
 
   await new Promise(r => { if (videoPreview.readyState >= 1) r(); else videoPreview.onloadedmetadata = r; });
   const duration = videoPreview.duration || 0;
@@ -857,6 +1010,7 @@ videoRunBtn.addEventListener('click', async () => {
     const t = Math.min(duration - 0.05, i * step);
     videoNote.textContent = `sampling frame ${i + 1} of ${frameCountToSample} (t=${t.toFixed(1)}s)…`;
     videoRunBtn.textContent = `Sampling ${i + 1}/${frameCountToSample}…`;
+    showLoading(`Analyzing frame ${i + 1} of ${frameCountToSample}…`);
     try {
       await seekTo(videoPreview, t);
       const blob = await captureFrameBlob(videoPreview);
@@ -868,6 +1022,17 @@ videoRunBtn.addEventListener('click', async () => {
     await new Promise(r => setTimeout(r, 250));
   }
 
+  voiceSuppressed = false;
+  if (pendingSpeech){
+    if (pendingSpeech.type === 'reading'){
+      announceReading(pendingSpeech.data, pendingSpeech.urgency);
+    } else if (pendingSpeech.type === 'unrecognized'){
+      speak("That doesn't look like a track surface.", { interrupt: false });
+    }
+    pendingSpeech = null;
+  }
+
+  hideLoading();
   liveDot.classList.remove('on');
   statusTag.textContent = 'done';
   videoRunBtn.disabled = false;
